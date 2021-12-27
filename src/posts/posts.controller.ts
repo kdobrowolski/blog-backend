@@ -5,11 +5,6 @@ import { PostsService } from './posts.service';
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Get()
-  findAll(): string {
-    return this.postsService.test();
-  }
-
   @Post()
   create() {
     return this.postsService.createPost();

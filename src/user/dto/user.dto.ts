@@ -5,8 +5,8 @@ import {
   Length,
   IsEmail,
   MinLength,
-  MaxLength,
-} from 'class-validator';
+  MaxLength, IsBoolean
+} from "class-validator";
 
 export class UserRegisterDto {
   @IsString()
@@ -34,4 +34,15 @@ export class UserRegisterDto {
 
   @IsNotEmpty()
   lastName?: string;
+
+  @IsBoolean()
+  isAdmin: boolean;
+}
+
+export class UserLoginDto {
+  @IsString()
+  username: string;
+
+  @IsString()
+  password: string;
 }

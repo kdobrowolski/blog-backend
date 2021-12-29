@@ -7,7 +7,7 @@ exports.up = function(knex) {
     table.string('password', 255).notNullable();
     table.string('firstName', 255).notNullable();
     table.string('lastName', 255).notNullable();
-    table.boolean('isAdmin').notNullable().defaultTo(false);
+    table.boolean('isAdmin').notNullable();
   });
 };
 

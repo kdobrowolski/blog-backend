@@ -1,6 +1,6 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Injectable } from '@nestjs/common';
 import { Knex } from 'knex';
-import { UserRegisterDto } from './dto/user.dto';
+import { UserLoginDto, UserRegisterDto } from "./dto/user.dto";
 import * as bcrypt from 'bcrypt';
 import { InjectKnex } from 'nestjs-knex';
 
@@ -9,13 +9,12 @@ export class UserService {
   constructor(@InjectKnex() readonly knex: Knex) {}
 
   async create(userRegisterDTO: UserRegisterDto) {
-    console.log('dsaasd');
     const username = userRegisterDTO.username;
     const existUser = await this.knex
       .table('users')
       .where('username', username)
       .first();
-    if (existUser.length != 0) {
+    if (existUser) {
       throw new ConflictException('User already exist');
     }
     const saltOrRounds = 10;
@@ -30,10 +29,22 @@ export class UserService {
       password: hashedPassword,
       firstName: userRegisterDTO.firstName,
       lastName: userRegisterDTO.lastName,
+      isAdmin: userRegisterDTO.isAdmin,
     };
 
     const createdUser = await this.knex.table('users').insert(user);
 
     return { createdUser, msg: 'User created!' };
+  }
+
+  async findOne(username: string) {
+    const user = await this.knex
+      .table('users')
+      .where('username', username)
+      .first();
+    if (!user) {
+      throw new ConflictException('User doesnt exist!');
+    }
+    return { user };
   }
 }

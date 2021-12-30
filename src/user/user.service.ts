@@ -1,12 +1,24 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Knex } from 'knex';
-import { UserLoginDto, UserRegisterDto } from "./dto/user.dto";
+import { UserRegisterDto } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
 import { InjectKnex } from 'nestjs-knex';
+import config from '../../config/Config';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const asyncRedis = require('async-redis');
 
 @Injectable()
 export class UserService {
-  constructor(@InjectKnex() readonly knex: Knex) {}
+  refreshTokenRedis;
+
+  constructor(@InjectKnex() readonly knex: Knex) {
+    this.refreshTokenRedis = asyncRedis.createClient({
+      host: '127.0.0.1',
+      port: 6379,
+      db: 1,
+    });
+  }
 
   async create(userRegisterDTO: UserRegisterDto) {
     const username = userRegisterDTO.username;
@@ -46,5 +58,19 @@ export class UserService {
       throw new ConflictException('User doesnt exist!');
     }
     return { user };
+  }
+
+  async findUserByRefreshToken(token: string) {
+    const userId = await this.refreshTokenRedis.get(token);
+
+    if (!userId) {
+      return null;
+    }
+    const user = await this.knex.table('users').where('id', userId).first();
+    return user;
+  }
+
+  deleteRefreshToken(token: string) {
+    return this.refreshTokenRedis.del(token);
   }
 }

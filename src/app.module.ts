@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { KnexModule } from 'nestjs-knex';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import config from '../config/Config';
 
 @Module({
   imports: [
@@ -14,10 +15,10 @@ import { AuthModule } from './auth/auth.module';
         client: 'mysql',
         useNullAsDefault: true,
         connection: {
-          host: process.env.DB_HOST,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASSWORD,
-          database: process.env.DB_NAME,
+          host: config.DB.host,
+          user: config.DB.user,
+          password: config.DB.password,
+          database: config.DB.name,
         },
       },
     }),

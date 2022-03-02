@@ -8,14 +8,16 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import config from '../../config/Config';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
+    forwardRef(() => RedisModule),
     PassportModule,
     JwtModule.register({
       secret: config.AUTH.secret,
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '500s' },
     }),
   ],
   controllers: [AuthController],

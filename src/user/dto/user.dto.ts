@@ -8,12 +8,12 @@ import {
   MaxLength, IsBoolean
 } from "class-validator";
 
-export class UserRegisterDto {
+export class UserDto {
   @IsString()
   @Length(2, 30, {
-    message: 'error.too_short_username',
+    message: 'error.too_short_name',
   })
-  username: string;
+  name: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -24,16 +24,7 @@ export class UserRegisterDto {
   @MaxLength(20, {
     message: " The password can't accept more than 20 characters ",
   })
-  // @Matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,20}$/,
-  //     { message: " A password at least contains one numeric digit, one supercase char and one lowercase char" }
-  // )
   password: string;
-
-  @IsNotEmpty()
-  firstName?: string;
-
-  @IsNotEmpty()
-  lastName?: string;
 
   @IsBoolean()
   isAdmin: boolean;
@@ -45,4 +36,28 @@ export class UserLoginDto {
 
   @IsString()
   password: string;
+}
+
+export class UserFullNameDto {
+  @IsNotEmpty()
+  firstName: string;
+
+  @IsNotEmpty()
+  lastName: string;
+}
+
+export class UserEmailDto {
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+}
+
+export class UserPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  newPassword: string;
+
+  @IsNotEmpty()
+  @IsString()
+  oldPassword: string;
 }

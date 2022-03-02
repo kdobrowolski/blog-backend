@@ -4,27 +4,21 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { sha256 } from 'js-sha256';
 import config from '../../config/Config';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const asyncRedis = require('async-redis');
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class AuthService {
-  refreshTokenRedis;
 
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-  ) {
-    this.refreshTokenRedis = asyncRedis.createClient({
-      host: config.REDIS.host,
-      port: config.REDIS.port,
-      db: config.REDIS.db,
-    });
-  }
+    private redisService: RedisService
+  ) {}
+
+  // VALIDATE USER
 
   async validateUser(username, password): Promise<any> {
-    const data = await this.userService.findOne(username);
+    const data = await this.userService.findOneByUsername(username);
     const isMatch = await bcrypt.compare(password, data.user.password);
 
     if (isMatch) {
@@ -34,9 +28,12 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
+  // LOGIN
+
+  async generateTokenPairs(user: any): Promise<Record<string,any>> {
+
     const payload = {
-      username: user.username,
+      username: user.name,
       sub: user.id,
     };
 
@@ -44,16 +41,11 @@ export class AuthService {
       payload.sub + config.AUTH.refresh_string + Date.now(),
     );
 
-    await this.refreshTokenRedis.set(
-      refreshTokenToSha256,
-      payload.sub.toString(),
-      'EX',
-      60,
-    );
+    await this.redisService.set(refreshTokenToSha256, payload.sub.toString());
 
     return {
-      access_token: this.jwtService.sign(payload),
-      refresh_token: refreshTokenToSha256,
+      accessToken: this.jwtService.sign(payload, { expiresIn: '5m' }),
+      refreshToken: refreshTokenToSha256,
     };
   }
 }

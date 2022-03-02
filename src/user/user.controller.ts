@@ -4,42 +4,69 @@ import {
   Get,
   Body,
   UseGuards,
-  Request,
-  Response,
+  Delete, Param, Put, ParseIntPipe, ForbiddenException
 } from '@nestjs/common';
-import { UserRegisterDto } from './dto/user.dto';
+import { UserDto, UserPasswordDto, UserEmailDto, UserFullNameDto } from './dto/user.dto';
 import { UserService } from './user.service';
-import { LocalAuthGuard } from '../auth/local-auth.guard';
-import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AuthedUser } from './user.decorator';
+import { Action, CaslAbilityFactory } from 'src/casl/casl-ability.factory';
 
 @Controller('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly authService: AuthService,
+    private caslAbilityFactory: CaslAbilityFactory
   ) {}
 
-  @Post('register')
-  registerUser(@Body() userRegisterDto: UserRegisterDto) {
-    return this.userService.create(userRegisterDto);
+  @Post('')
+  @UseGuards(JwtAuthGuard)
+  async registerUser(@AuthedUser() user, @Body() userDto: UserDto): Promise<any> {
+
+    const userWithRoles = await this.userService.findUserWithRoles(user);
+
+    const ability = await this.caslAbilityFactory.createForUser(userWithRoles.roles);
+
+    if (ability.can(Action.Create, 'User')) {
+      return this.userService.create(userDto);
+    } else {
+      throw new ForbiddenException('forbidden_resources');
+    }
   }
 
-  @UseGuards(LocalAuthGuard)
-  @Post('login')
-  async loginUser(@Request() req, @Response({ passthrough: true }) res) {
-    const resData = await this.authService.login(req.user);
-    res.cookie('access_token', resData.access_token);
-    res.cookie('refresh_token', resData.refresh_token, {
-      httpOnly: true,
-    });
-
-    return resData;
+  @Get('moderator')
+  getModerator() {
+    return this.userService.getModerator();
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('auth/me')
-  authUser(@Request() req) {
-    return req.user;
+  @Delete(':id')
+  async deleteUser(@AuthedUser() user, @Param('id', ParseIntPipe) id): Promise<any> {
+    
+    const userWithRoles = await this.userService.findUserWithRoles(user);
+
+    const ability = await this.caslAbilityFactory.createForUser(userWithRoles.roles);
+
+    if (ability.can(Action.Delete, 'User')) {
+      return this.userService.deleteUserById(id);
+    } else {
+      throw new ForbiddenException('forbidden_resources');
+    }
+  }
+
+  @Put(':id/fullname')
+  changeFullName(@Param('id', ParseIntPipe) id: number, @Body() data: UserFullNameDto): any {
+    return this.userService.changeFullname(data, id);
+  }
+
+  @Put(':id/email')
+  changeEmail(@Param('id', ParseIntPipe) id: number, @Body() data: UserEmailDto): any {
+    return this.userService.changeEmail(data, id);
+  }
+
+  @Put(':id/password')
+  changePassword(@Param('id', ParseIntPipe) id: number, @Body() data: UserPasswordDto): any {
+    return this.userService.changePassword(data, id);
   }
 }
+

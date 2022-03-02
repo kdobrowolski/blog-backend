@@ -1,4 +1,3 @@
-
 exports.up = function(knex) {
   return knex.schema.createTable('users', function (table) {
     table.increments('id').primary();
@@ -7,7 +6,7 @@ exports.up = function(knex) {
     table.string('password', 255).notNullable();
     table.string('firstName', 255).notNullable();
     table.string('lastName', 255).notNullable();
-    table.boolean('isAdmin').notNullable().defaultTo(false);
+    table.timestamps();
   });
 };
 

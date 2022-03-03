@@ -20,6 +20,7 @@ import { FileModule } from './file/file.module';
 import { GalleryModule } from './gallery/gallery.module';
 import { AuthorModule } from './author/author.module';
 import { CaslModule } from './casl/casl.module';
+import { RoleService } from './role/role.service';
 
 @Module({
   imports: [
@@ -79,6 +80,6 @@ import { CaslModule } from './casl/casl.module';
     CaslModule,
   ],
   controllers: [AppController],
-  providers: [AppService, FileService],
+  providers: [AppService, FileService, RoleService],
 })
 export class AppModule {}

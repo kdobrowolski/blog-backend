@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { Knex } from 'knex';
 import { UserDto, UserEmailDto, UserPasswordDto, UserFullNameDto } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
@@ -7,13 +7,16 @@ import { RedisService } from "../redis/redis.service";
 import config from '../../config/Config';
 import { User } from "./user.interface";
 import { UserExistsException } from "./exceptions/user-exists.exception";
+import { RoleService } from "src/role/role.service";
+import { UserUpdateException } from "./exceptions/user-update.exception";
 
 @Injectable()
 export class UserService {
 
   constructor(
     @InjectKnex() readonly knex: Knex,
-    private redisService: RedisService
+    private readonly redisService: RedisService,
+    private readonly roleService: RoleService
   ) {}
 
   // GET MODERATORS
@@ -38,18 +41,10 @@ export class UserService {
       parseInt(saltOrRounds),
     );
 
-    const { name, email, password, firstName, lastName } = user;
-
-    const userObj = {
-      name,
-      email,
-      password,
-      firstName,
-      lastName
-    }
+    const { roles, ...fields } = user;
 
     const createdUser = await this.knex<User>('users')
-        .insert(userObj)
+        .insert(fields)
         .onConflict('name').ignore();
 
     if (!createdUser[0]) {
@@ -58,19 +53,7 @@ export class UserService {
 
     const userId = parseInt(createdUser[0]);
 
-    await this.createRole(userId, user.roles);
-  }
-
-  async createRole(id: number, roles: Array<string>): Promise<void> {
-    roles.forEach(async role => {
-
-      const roleObj = {
-        userId: id,
-        role
-      }
-      
-      await this.knex('roles').insert(roleObj)
-    })
+    await this.roleService.createRole(userId, roles);
   }
 
   // FIND USER
@@ -131,33 +114,32 @@ export class UserService {
     return this.knex.table<User>('users').where('id', id).del();
   }
 
-  // CHANGE FULLNAME
-
-  async changeFullname(data: UserFullNameDto, id: number): Promise<void> {
-    await this.knex.table<User>('users').where('id', id).update({ firstName: data.firstName, lastName: data.lastName });
-  }
-
-  // CHANGE EMAIL
-
-  async changeEmail(data: UserEmailDto, id: number): Promise<void> {
-    await this.knex.table<User>('users').where('id', id).update({ email: data.email });
+  async updateUser(id: number, data: UserDto): Promise<void> {
+    try {
+      if (!Object.keys(data).length) {
+        throw new BadRequestException('Object is empty!');
+      }
+      await this.knex.table<User>('users').where('id', id).update(data);
+    } catch (err) {
+      throw new UserUpdateException('Failed updating user');
+    }
   }
 
   // CHANGE PASSWORD
 
   async changePassword(data: UserPasswordDto, id: number): Promise<void> {
     const res = await this.knex.table<User>('users').select('password').where('id', id).first();
-
+    
     const oldMatch = await bcrypt.compare(data.oldPassword, res.password);
 
     if (!oldMatch) {
       throw new ConflictException('Wrong old password');
     }
 
-    const saltOrRounds = 10;
+    const saltOrRounds = config.BCRYPT.saltOrRounds;
     const hashedPassword = await bcrypt.hash(
       data.newPassword,
-      saltOrRounds,
+      parseInt(saltOrRounds),
     );
 
     await this.knex.table<User>('users').where('id', id).update({ password: hashedPassword });

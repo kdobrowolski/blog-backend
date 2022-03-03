@@ -6,6 +6,7 @@ import { InjectKnex } from 'nestjs-knex'
 import { RedisService } from "../redis/redis.service";
 import config from '../../config/Config';
 import { User } from "./user.interface";
+import { UserExistsException } from "./exceptions/user-exists.exception";
 
 @Injectable()
 export class UserService {
@@ -20,7 +21,8 @@ export class UserService {
   async getModerator(): Promise<Record<string,any>> {
     const moderators = await this.knex.table<User>('users')
       .select('id', 'firstName', 'lastName', 'name', 'email')
-      .where('isAdmin', 0);
+      .leftJoin('roles', 'users.id', 'roles.userId')
+      .where('role', 'Moderator');
 
     return { moderators };
   }
@@ -36,11 +38,39 @@ export class UserService {
       parseInt(saltOrRounds),
     );
 
-    const { name } = user;
+    const { name, email, password, firstName, lastName } = user;
 
-    await this.knex<User>('users')
-        .insert(user)
+    const userObj = {
+      name,
+      email,
+      password,
+      firstName,
+      lastName
+    }
+
+    const createdUser = await this.knex<User>('users')
+        .insert(userObj)
         .onConflict('name').ignore();
+
+    if (!createdUser[0]) {
+      throw new UserExistsException('User exist!');
+    }
+
+    const userId = parseInt(createdUser[0]);
+
+    await this.createRole(userId, user.roles);
+  }
+
+  async createRole(id: number, roles: Array<string>): Promise<void> {
+    roles.forEach(async role => {
+
+      const roleObj = {
+        userId: id,
+        role
+      }
+      
+      await this.knex('roles').insert(roleObj)
+    })
   }
 
   // FIND USER

@@ -76,7 +76,7 @@ export class UserController {
 
       await this.userService.updateUser(id, fields);
 
-      if (roles) await this.roleService.updateRole(id, roles);
+      if (roles) await this.roleService.createRole(id, roles);
     } catch (err) {
       switch (err.constructor) {
         case UserUpdateException: 

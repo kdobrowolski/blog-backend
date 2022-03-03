@@ -28,8 +28,4 @@ export class RoleService {
             throw new UserUpdateException('Failed updating user');
         }
     }
-
-    async updateRole(id: number, roles: Array<string>): Promise<void> {
-        await this.createRole(id, roles);
-    }
 }

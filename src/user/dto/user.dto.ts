@@ -17,7 +17,7 @@ export class UserDto {
 
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @IsNotEmpty()
   @MinLength(8, { message: ' The min length of password is 8 ' })
@@ -27,13 +27,13 @@ export class UserDto {
   password: string;
 
   @IsNotEmpty()
-  firstName: string;
+  firstName?: string;
 
   @IsNotEmpty()
-  lastName: string;
+  lastName?: string;
 
   @IsArray()
-  roles: string[]
+  roles?: string[]
 }
 
 export class UserLoginDto {

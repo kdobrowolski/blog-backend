@@ -1,0 +1,1 @@
+export class UserUpdateException extends Error { }

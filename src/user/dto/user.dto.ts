@@ -5,7 +5,7 @@ import {
   Length,
   IsEmail,
   MinLength,
-  MaxLength, IsBoolean
+  MaxLength, IsBoolean, IsArray
 } from "class-validator";
 
 export class UserDto {
@@ -26,13 +26,19 @@ export class UserDto {
   })
   password: string;
 
-  @IsBoolean()
-  isAdmin: boolean;
+  @IsNotEmpty()
+  firstName: string;
+
+  @IsNotEmpty()
+  lastName: string;
+
+  @IsArray()
+  roles: string[]
 }
 
 export class UserLoginDto {
   @IsString()
-  username: string;
+  name: string;
 
   @IsString()
   password: string;

@@ -11,6 +11,8 @@ import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthedUser } from './user.decorator';
 import { Action, CaslAbilityFactory } from 'src/casl/casl-ability.factory';
+import { UserExistsException } from './exceptions/user-exists.exception';
+import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 
 @Controller('user')
 export class UserController {
@@ -23,14 +25,23 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   async registerUser(@AuthedUser() user, @Body() userDto: UserDto): Promise<any> {
 
-    const userWithRoles = await this.userService.findUserWithRoles(user);
+    try {
+      const userWithRoles = await this.userService.findUserWithRoles(user);
 
-    const ability = await this.caslAbilityFactory.createForUser(userWithRoles.roles);
+      const ability = await this.caslAbilityFactory.createForUser(userWithRoles.roles);
 
-    if (ability.can(Action.Create, 'User')) {
-      return this.userService.create(userDto);
-    } else {
-      throw new ForbiddenException('forbidden_resources');
+      if (ability.can(Action.Create, 'User')) {
+        return await this.userService.create(userDto);
+      } else {
+        throw new ForbiddenException('forbidden_resources');
+      }
+    } catch (err) {
+      switch (err.constructor) {
+        case UserExistsException:
+          throw new BadRequestException(err.message);
+      }
+      throw new InternalServerErrorException();
+
     }
   }
 

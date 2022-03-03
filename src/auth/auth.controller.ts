@@ -18,7 +18,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async authUser(@AuthedUser() user): Promise<Record<string,any>> {
-    return user;
+    const userWithRoles = await this.userService.findUserWithRoles(user);
+    return userWithRoles;
   }
 
   @UseGuards(LocalAuthGuard)

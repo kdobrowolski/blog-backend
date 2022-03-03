@@ -54,6 +54,14 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getUserById(@Param('id', ParseIntPipe) id): Promise<any> {
+    const { user } = await this.userService.findOneById(id);
+
+    return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteUser(@AuthedUser() user, @Param('id', ParseIntPipe) id): Promise<any> {
     

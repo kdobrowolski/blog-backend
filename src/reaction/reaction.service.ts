@@ -41,4 +41,11 @@ export class ReactionService {
       .andWhere('postId', id)
       .del();
   }
+
+  async getUserReaction(id: number, ip: string) {
+    return await this.knex<Reaction>('reactions')
+      .where('userIp', ip)
+      .andWhere('postId', id)
+      .first();
+  }
 }

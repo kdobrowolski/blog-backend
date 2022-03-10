@@ -24,7 +24,8 @@ export class PostService {
   async findOnePost(id: number): Promise<Record<string,any>> {
     const post = await this.knex
         .table<Post>('posts')
-        .where('id', id);
+        .where('id', id)
+        .first();
 
     const reactions = await this.knex.table<Reaction>('reactions')
         .select(['reactionType', this.knex.raw('COUNT(reactionType) as count')])

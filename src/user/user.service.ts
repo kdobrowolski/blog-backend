@@ -19,15 +19,13 @@ export class UserService {
     private readonly roleService: RoleService
   ) {}
 
-  // GET MODERATORS
+  // GET USERS
 
-  async getModerator(): Promise<Record<string,any>> {
-    const moderators = await this.knex.table<User>('users')
-      .select('id', 'firstName', 'lastName', 'name', 'email')
-      .leftJoin('roles', 'users.id', 'roles.userId')
-      .where('role', 'Moderator');
+  async getUsers(): Promise<Record<string,any>> {
+    const users = await this.knex.table<User>('users')
+      .select('id', 'firstName', 'lastName', 'name', 'email');
 
-    return { moderators };
+    return { users };
   }
 
   // CREATE USER
@@ -35,7 +33,7 @@ export class UserService {
   async create(user: UserDto): Promise<void> {
 
     const saltOrRounds = config.BCRYPT.saltOrRounds;
-    
+
     user.password = await bcrypt.hash(
       user.password,
       parseInt(saltOrRounds),

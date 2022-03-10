@@ -32,7 +32,7 @@ export class CommentService {
     // GET COMMENT
 
     async getComments(id: number): Promise<Record<string,any>> {
-        const comments = await this.knex.table<Comment>('comments').where('post_id', id);
+        const comments = await this.knex.table<Comment>('comments').where('postId', id);
     
         return {
             comments, 

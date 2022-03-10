@@ -1,7 +1,6 @@
-import { Req, Body, Controller, Param, Post, Delete, Request, Get, ParseIntPipe } from "@nestjs/common";
+import { Body, Controller, Param, Post, Delete, Request, Get, ParseIntPipe } from "@nestjs/common";
 import { ReactionDto } from './dto/reaction.dto';
 import { ReactionService } from './reaction.service';
-const requestIp = require('request-ip');
 
 @Controller('reaction')
 export class ReactionController {
@@ -17,5 +16,10 @@ export class ReactionController {
   @Delete(':id')
   delete(@Param('id', ParseIntPipe) id: number, @Body() reactionDto: ReactionDto): any {
     return this.reactionService.deleteReaction(id, reactionDto);
+  }
+
+  @Get(':id/:ip')
+  getUserReaction(@Param('id', ParseIntPipe) id: number, @Param('ip') ip: string) {
+    return this.reactionService.getUserReaction(id, ip);
   }
 }

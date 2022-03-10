@@ -18,12 +18,14 @@ export class CaslAbilityFactory {
     createForUser(user): any {
         const { can, cannot, build } = new AbilityBuilder(Ability as AbilityClass<AppAbility>);
     
-        if (user.includes('Admin')) {
+        const { roles } = user;
+
+        if (roles.includes('Admin')) {
             can(Action.Create, 'all');
             can(Action.Delete, 'all');
         }
 
-        if (user.includes('Moderator')) {
+        if (roles.includes('Moderator')) {
             
         }
 

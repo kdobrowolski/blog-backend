@@ -31,7 +31,7 @@ export class UserController {
     try {
       const userWithRoles = await this.userService.findUserWithRoles(user);
 
-      const ability = await this.caslAbilityFactory.createForUser(userWithRoles.roles);
+      const ability = await this.caslAbilityFactory.createForUser(userWithRoles);
 
       if (ability.can(Action.Create, 'User')) {
         return await this.userService.create(userDto);
@@ -48,17 +48,18 @@ export class UserController {
     }
   }
 
-  @Get('moderator')
-  getModerator() {
-    return this.userService.getModerator();
+  @Get()
+  getAllUsers() {
+    return this.userService.getUsers();
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) id): Promise<any> {
     const { user } = await this.userService.findOneById(id);
+    const userWithRoles = await this.userService.findUserWithRoles(user);
 
-    return user;
+    return userWithRoles;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -67,7 +68,7 @@ export class UserController {
     
     const userWithRoles = await this.userService.findUserWithRoles(user);
 
-    const ability = await this.caslAbilityFactory.createForUser(userWithRoles.roles);
+    const ability = await this.caslAbilityFactory.createForUser(userWithRoles);
 
     if (ability.can(Action.Delete, 'User')) {
       return this.userService.deleteUserById(id);

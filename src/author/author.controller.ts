@@ -1,5 +1,6 @@
-import { Body, Get } from '@nestjs/common';
+import { Body, Get, UseGuards } from '@nestjs/common';
 import { Controller, Put } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileService } from 'src/file/file.service';
 import { AuthorDto } from './dto/author.dto';
 
@@ -17,12 +18,9 @@ export class AuthorController {
         return content;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put('')
     async editAboutMe(@Body() body: AuthorDto): Promise<any> {
-        const data = {
-            content: body.content
-        }
-
-        return this.fileService.editFile('./json/aboutMe.json', data);
+        return this.fileService.editFile('./json/aboutMe.json', body);
     }
 }
